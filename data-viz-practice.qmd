@@ -2,5 +2,159 @@
 title: "EDS 221: Day 8 interactive"
 author: "Liz Peterson"
 format: html
+editor_options: 
+  chunk_output_type: console
 ---
+
+```{r}
+# general use packages:
+library(tidyverse)
+library(here)
+library(janitor)
+
+# specifically for plots:
+library(patchwork)
+library(ggrepel)
+library(gghighlight)
+library(paletteer)
+library(ggExtra)
+library(ggbeeswarm)
+```
+
+```{r}
+# load in lizard data
+lizards <- read_csv(here("data_tidy", "lizards.csv"))
+```
+
+```{r}
+# all three of these plots are exactly the same 
+# ggplot sets what is global for the whole plot. so what we assign there will be the same. the first plot says that the data will be lizards and the axes will. the second plot says the data will be lizards for everything, but we could make another graph with different axes. 
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() + 
+  geom_line()
+
+ggplot(data = lizards) +
+  geom_point(aes(x = total_length, y = weight)) +
+  
+# here, I could conceptually add another layer with a different data set and axes, because nothing is set in ggplot
+ggplot() +
+  geom_point(data = lizards, aes(x = total_length, y = weight))
+```
+
+```{r}
+ggplot(data = lizards, aes(x = total_length)) +
+  geom_histogram()
+```
+
+```{r}
+# the jitter can be better for seeing distribution of points than a regular scatter plot
+ggplot(data = lizards, aes(y = common_name, x = weight)) +
+  geom_jitter()
+```
+
+## working with colors
+```{r}
+# updating based on a constant --> To change aesthetics of a graph based on a constant (e.g. “Make all the points BLUE”), we can add the information directly to the relevant geom_ layer
+ggplot(data = lizards, aes(x = weight)) +
+  geom_histogram(color = "orange",
+                 fill = "purple",
+                 linewidth = 2,
+                 linetype = "dotted")
+```
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(color = "#FFC2d1",
+             fill = "#726DA8",
+             shape = 22,
+             size = 10,
+             alpha = 0.7)
+```
+
+## working with scales
+```{r}
+# aesthetics changed by variable
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name,
+                 size = total_length),
+             alpha = 0.8) + # changed the transparency out of the aesthetics call because it's not based on a variable
+  #scale_color_brewer(palette = "Set3")
+  scale_color_discrete(type = c("#FEFADC", "#FEFADC", "#FEFADC", "#FEFADC", "#FEFADC", "#FEFADC","#1098F7"))
+```
+
+## working with themes
+```{r}
+# adding in themes!
+ggplot(data = lizards, aes(x = site, y = weight)) +
+  geom_jitter(aes(color = common_name)) +
+  theme_minimal()
+
+ggplot(data = lizards, aes(x = site, y = weight)) +
+  geom_jitter(aes(color = common_name)) +
+  theme_bw()
+
+ggplot(data = lizards, aes(x = site, y = weight)) +
+  geom_jitter(aes(color = common_name)) +
+  theme_light()
+```
+
+## axis labels!!!
+```{r}
+# always update axis labels!!!
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  labs(x = "Total Length (mm)",
+       y = "Weight (g)",
+       title = "Lizard size")
+```
+
+## faceting
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  facet_wrap(~common_name, ncol = 3, scales = "free") + # panel for each species based on common name
+  # without scales = "free", all of the axes will be the same for each species. scales = "free" scales the axes. 
+  labs(x = "Total Length (mm)",
+       y = "Weight (g)")
+```
+
+```{r}
+# faceting with multiple variables
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  facet_grid(sex ~ tail)
+```
+
+```{r}
+lizards_counts <- lizards %>%
+  count(common_name)
+
+ggplot(data = lizards_counts, aes(y = common_name, x = n)) +
+  geom_col() # by default here, the columns are put in alphabetical order
+
+ggplot(data = lizards_counts, aes(y = fct_reorder(common_name, n), x = n)) +
+  geom_col()
+# we are reordering the common names based on the number of individuals, and we can do this because common name is a factor
+```
+
+```{r}
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = common_name, shape = common_name),
+             size = 2) +
+  theme_minimal() +
+  labs(x = "Total Length (mm)",
+       y = "Weight (g)",
+       title = "Lizard species") +
+  facet_wrap(~common_name, scales = "free")
+```
+
+```{r}
+# facet grid using factor reordering
+ggplot(data = lizards, aes(y = fct_infreq(common_name))) +
+  geom_bar(aes(fill = site)) +
+  theme_minimal() +
+  labs(x = "Lizard counts",
+       y = "Species (common name)") +
+  facet_grid(sex ~ tail)
+```
 
